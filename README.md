@@ -59,12 +59,12 @@ Please replace `<value>` with your values (remove the `<>` as well)
         "description": "<string>"
     },
     
-    "xmin": <number>,
-    "ymin": <number>,
-    "zmin": <number>,
-    "xmax": <number>,
-    "ymax": <number>,
-    "zmax": <number>,
-    "resolution": <number>
+    "xmin": <int>,
+    "ymin": <int>,
+    "zmin": <int>,
+    "xmax": <int>,
+    "ymax": <int>,
+    "zmax": <int>,
+    "resolution": <int>
 }
 ```
