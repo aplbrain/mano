@@ -46,8 +46,6 @@ def main():
         print(e)
         exit(0)
 
-    rmt.create_project(chan_setup)
-
     # Ranges use the Python convention where the second number is the stop
     # value.  Thus, x_rng specifies x values where: 0 <= x < 8.
     x_rng = [anno_config["xmin"], anno_config["xmax"]]
