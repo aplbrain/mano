@@ -59,7 +59,7 @@ def main():
     # If specified to upload, upload cutout to the boss for the same dimensions. 
     if args.down:
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
-        np.save(donwload_numpy)
+        np.save(annos_config["image"]["filepath"], donwload_numpy)
     if args.up:
         nii = nib.load(anno_config["file_path"]) 
         data = np.array(nii.dataobj)
