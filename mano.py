@@ -15,15 +15,14 @@ def main():
     with open(user_file) as f:
         anno_config = json.load(f)
     
-
+    #Creates boss remote with the correct credentials
     rmt = BossRemote({
         "protocol": anno_config["protocol"],
         "host": anno_config["host"],
         "token": anno_config["token"],
     })
 
-    nii = nib.load(anno_config["file_path"]) 
-    data = np.array(nii.dataobj)
+    #Try to get_cahnnel of exisiting raw data and create a new channel for annotations
     try:
         IMG_COLL_NAME = anno_config["image"]["collection"]
         IMG_EXP_NAME = anno_config["image"]["experiment"]
@@ -33,7 +32,14 @@ def main():
         ANN_COLL_NAME = anno_config["annotation"]["collection"]
         ANN_EXP_NAME = anno_config["annotation"]["experiment"]
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
-        rmt.create_project(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME,'image', datatype=anno_config["datatype"]))
+
+        # Try to create channel, if it already exisits, simply pass
+        try:
+            rmt.create_project(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME,'image', datatype=anno_config["datatype"]))
+        except:
+            print("Channel already exists, passing!")
+            pass
+
     except Exception as e:
         print("Please specify image or annotation collection/experiment/channel for both annotations and raw images in your json file")
         print(e)
@@ -46,6 +52,7 @@ def main():
     z_rng = [anno_config["zmin"], anno_config["zmax"]]
     res = anno_config["resolution"]
 
+    # Data must be in C order
     data = data.copy(order="C")
 
     # Make data match what was specified for the channel.
@@ -57,6 +64,8 @@ def main():
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
         np.save(donwload_numpy)
     if args.up:
+        nii = nib.load(anno_config["file_path"]) 
+        data = np.array(nii.dataobj)
         ann_chan = get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
         rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
     else: 
@@ -64,6 +73,7 @@ def main():
 
 if __name__ == '__main__':
     
+    # Parser arguments:
     parser = argparse.ArgumentParser(description = "Script to upload annotations to the boss",
                                      formatter_class=argparse.RawDescriptionHelpFormatter
                                      )
@@ -79,5 +89,6 @@ if __name__ == '__main__':
                 help = "Execute download")
     args = parser.parse_args()
 
+    #Define filePath for the user provided json file. 
     user_file = args.filePath
     main() 
