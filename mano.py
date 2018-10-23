@@ -1,4 +1,4 @@
-import intern
+from intern.resource.boss.resource import *
 from intern.remote.boss import BossRemote
 import nibabel as nib
 import numpy as np
@@ -32,18 +32,21 @@ def main():
         ANN_COLL_NAME = anno_config["annotation"]["collection"]
         ANN_EXP_NAME = anno_config["annotation"]["experiment"]
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
+        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, 'image', datatype=anno_config["annotation"]["datatype"])
 
         # Try to create channel, if it already exisits, simply pass
         try:
-            rmt.create_project(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME,'image', datatype=anno_config["datatype"])
-        except:
+            rmt.create_project(chan_setup)
+        except Exception as e:
             print("Channel already exists, passing!")
+            print(e)
             pass
-
     except Exception as e:
         print("Please specify image or annotation collection/experiment/channel for both annotations and raw images in your json file")
         print(e)
         exit(0)
+
+    rmt.create_project(chan_setup)
 
     # Ranges use the Python convention where the second number is the stop
     # value.  Thus, x_rng specifies x values where: 0 <= x < 8.
@@ -51,12 +54,6 @@ def main():
     y_rng = [anno_config["ymin"], anno_config["ymax"]]
     z_rng = [anno_config["zmin"], anno_config["zmax"]]
     res = anno_config["resolution"]
-
-    # Data must be in C order
-    data = data.copy(order="C")
-
-    # Make data match what was specified for the channel.
-    data = data.astype(np.uint64)
 
     # If specified to download, grab a cutout from boss
     # If specified to upload, upload cutout to the boss for the same dimensions. 
@@ -66,7 +63,13 @@ def main():
     if args.up:
         nii = nib.load(anno_config["file_path"]) 
         data = np.array(nii.dataobj)
-        ann_chan = get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
+        # Data must be in C order
+        data = data.copy(order="C")
+
+        # Make data match what was specified for the channel.
+        data = data.astype(np.uint64)
+
+        ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
         rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
     else: 
         print("Please specify either upload(-up) or download(-down) flags")
