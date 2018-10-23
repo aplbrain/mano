@@ -1,0 +1,9 @@
+numpy
+requests==2.11.1
+blosc==1.4.4
+six
+mock
+nose2
+intern
+nibabel
+pillow
