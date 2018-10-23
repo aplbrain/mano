@@ -35,7 +35,7 @@ def main():
 
         # Try to create channel, if it already exisits, simply pass
         try:
-            rmt.create_project(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME,'image', datatype=anno_config["datatype"]))
+            rmt.create_project(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME,'image', datatype=anno_config["datatype"])
         except:
             print("Channel already exists, passing!")
             pass
