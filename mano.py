@@ -32,13 +32,13 @@ def main():
         ANN_COLL_NAME = anno_config["annotation"]["collection"]
         ANN_EXP_NAME = anno_config["annotation"]["experiment"]
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
-        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, 'image', datatype=anno_config["annotation"]["datatype"])
+        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', datatype=anno_config["annotation"]["datatype"], description=anno_config["annotation"]["description"], sources=[anno_config["image"]["channel"]])
 
         # Try to create channel, if it already exisits, simply pass
         try:
             rmt.create_project(chan_setup)
         except Exception as e:
-            print("Channel already exists, passing!")
+            print("Channel already exists, passing! Ignore the `non_field_errors` below")
             print(e)
             pass
     except Exception as e:
@@ -57,16 +57,25 @@ def main():
     # If specified to upload, upload cutout to the boss for the same dimensions. 
     if args.down:
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
-        np.save(annos_config["image"]["filepath"], donwload_numpy)
+        np.save(annos_config["image"]["file_path"], donwload_numpy)
+        # If downloading, try to download annotations if they already exist. 
+        try:
+            ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
+            download_nifti = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
+            nifti_img = nib.Nifti1Image(download_nifti, np.eye(4))
+            nib.save(nifti_img, anno_config["annotation"]["file_path"])
+        except Exception as e:
+            print("Annotation does not exist yet!")
+            pass
     if args.up:
-        nii = nib.load(anno_config["file_path"]) 
+        nii = nib.load(anno_config["annotation"]["file_path"]) 
         data = np.array(nii.dataobj)
+        # data = np.swapaxes(data,0,2)
         # Data must be in C order
         data = data.copy(order="C")
 
         # Make data match what was specified for the channel.
         data = data.astype(np.uint64)
-
         ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
         rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
     else: 
