@@ -1,0 +1,42 @@
+## Manual Annotation Protocol
+
+Many neurocartography applications require manual annotations to train machine learning algorithms and explore datasets.  Here we describe a protocol for uploading annotations using ITK Snap. 
+
+### Overall Steps
+
+- Create a JSON file specifying how to upload data following the example below. 
+- To download data
+- To upload data
+- 
+
+### File name convention
+
+
+### Starter JSON file
+
+Please replace `<value>` with your values (remove the `<>` as well) 
+```
+{
+    "protocol": "https", 
+    "host": "api.bossdb.org",
+    "token": "<string>",
+    "file_path": "<string>",
+    "image": {
+        "collection": "<string>",
+        "experiment": "<string>",
+        "channel": "<string>"
+    },
+    "annotation": {
+        "collection": "<string>",
+        "experiment": "<string>",
+        "channel": "<string>"
+    },
+    "xmin": <number>,
+    "ymin": <number>,
+    "zmin": <number>,
+    "xmax": <number>,
+    "ymax": <number>,
+    "zmax": <number>,
+    "resolution": <number>
+}
+```
