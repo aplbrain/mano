@@ -5,10 +5,10 @@ Many neurocartography applications require manual annotations to train machine l
 ### Overall Steps
 
 - Create a JSON file specifying how to upload data following the example below. 
-- Download data by running `<to insert>`
+- Download data by running `python3 mano.py -fp /path/to/json/file -d`
 - Annotate by loading in your data to ITK Snap
 - Modify your JSON file by inserting the annotation_channel location
-- To upload data run `<to insert>`
+- To upload data run `python3 mano.py -fp /path/to/json/file -u`
 
 ### File name convention
 
