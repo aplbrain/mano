@@ -34,7 +34,7 @@ def main():
         ANN_COLL_NAME = anno_config["annotation"]["collection"]
         ANN_EXP_NAME = anno_config["annotation"]["experiment"]
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
-        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', description=anno_config["annotation"]["description"], datatype=anno_config["annotation"]["datatype"], sources=[anno_config["image"]["channel"]])
+        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', datatype=anno_config["annotation"]["datatype"], sources=[anno_config["image"]["channel"]])
 
         # Try to create channel, if it already exisits, simply pass
         try:
