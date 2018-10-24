@@ -39,7 +39,7 @@ def main():
         # Try to create channel, if it already exisits, simply pass
         try:
             ann_chan = rmt.create_project(chan_setup)
-        except HTTPError:
+        except Exception as e:
             ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
             pass
     except Exception as e:
