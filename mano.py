@@ -4,12 +4,14 @@ import nibabel as nib
 import numpy as np
 from PIL import Image
 import numpy as np
-import os
 import json
 import argparse
+from requests import HTTPError
 
 """
     Script to keep track of uploaded annotations.
+
+    Luis.Rodriguez@jhuapl.edu
 """
 def main():
     with open(user_file) as f:
@@ -32,14 +34,13 @@ def main():
         ANN_COLL_NAME = anno_config["annotation"]["collection"]
         ANN_EXP_NAME = anno_config["annotation"]["experiment"]
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
-        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', datatype=anno_config["annotation"]["datatype"], description=anno_config["annotation"]["description"], sources=[anno_config["image"]["channel"]])
+        chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', description=anno_config["annotation"]["description"], datatype=anno_config["annotation"]["datatype"], sources=[anno_config["image"]["channel"]])
 
         # Try to create channel, if it already exisits, simply pass
         try:
-            rmt.create_project(chan_setup)
-        except Exception as e:
-            print("Channel already exists, passing! Ignore the `non_field_errors` below")
-            print(e)
+            ann_chan = rmt.create_project(chan_setup)
+        except HTTPError:
+            ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
             pass
     except Exception as e:
         print("Please specify image or annotation collection/experiment/channel for both annotations and raw images in your json file")
@@ -60,7 +61,6 @@ def main():
         np.save(annos_config["image"]["file_path"], donwload_numpy)
         # If downloading, try to download annotations if they already exist. 
         try:
-            ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
             download_nifti = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
             nifti_img = nib.Nifti1Image(download_nifti, np.eye(4))
             nib.save(nifti_img, anno_config["annotation"]["file_path"])
@@ -69,17 +69,24 @@ def main():
             pass
     if args.up:
         nii = nib.load(anno_config["annotation"]["file_path"]) 
-        data = np.array(nii.dataobj)
-        # data = np.swapaxes(data,0,2)
-        # Data must be in C order
-        data = data.copy(order="C")
+        data = np.array(nii.get_data())
+        # Data must be in Z, Y, X format
+        data = np.swapaxes(data,0,2)
 
-        # Make data match what was specified for the channel.
-        data = data.astype(np.uint64)
-        ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
+        # Use datatype specified in JSON provided file
+        data = data.astype(anno_config["annotation"]["datatype"])
+        
+        #Upload the data to the annotation channel
+        print("Uploading your annotations...")
         rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
     else: 
         print("Please specify either upload(-up) or download(-down) flags")
+
+    # Verify that the cutout uploaded correctly by comparing arrays. 
+    ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
+    np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
+
+    print('Annotation data uploaded and verified.')
 
 if __name__ == '__main__':
     
