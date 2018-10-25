@@ -70,7 +70,7 @@ def main():
     if args.up:
         if anno_config["annotation"]["extension"] == "npy":
             data = np.load(anno_config["annotation"]["file_path"])
-        else:
+        elif anno_config["annotation"]["extension"] == "nii":
             nii = nib.load(anno_config["annotation"]["file_path"]) 
             data = np.array(nii.get_data())
 
@@ -78,24 +78,36 @@ def main():
         if data.nbytes > 2147483631:
             print("Your numpy array was larger than blosc could handle. It has been split.")
             print(data.shape)
-            data1,data2 = np.split(data, 2)
+            data1,data2,data3,data4,data5 = np.array_split(data, 5)
 
             # Data must be in Z, Y, X format
             data1 = np.swapaxes(data1,0,2)
             data2 = np.swapaxes(data2,0,2)
+            data3 = np.swapaxes(data3,0,2)
+            data4 = np.swapaxes(data4,0,2)
+            data5 = np.swapaxes(data5,0,2)
 
             print("New shapes:")
             print(data1.shape)
             print(data2.shape)
+            print(data3.shape)
+            print(data4.shape)
+            print(data5.shape)
 
             # Use datatype specified in JSON provided file
             data1 = data1.astype(anno_config["annotation"]["datatype"])
             data2 = data2.astype(anno_config["annotation"]["datatype"])
+            data3 = data3.astype(anno_config["annotation"]["datatype"])
+            data4 = data4.astype(anno_config["annotation"]["datatype"])
+            data5 = data5.astype(anno_config["annotation"]["datatype"])
 
             #Upload the data to the annotation channel
             print("Uploading your annotations...")
             rmt.create_cutout(ann_chan, res, [x_rng[0],x_rng[0]+data1.shape[2]], y_rng, z_rng, data1)
-            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2],x_rng[1]], y_rng, z_rng, data2)
+            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]], y_rng, z_rng, data2)
+            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]], y_rng, z_rng, data3)
+            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]+data4.shape[2]], y_rng, z_rng, data4)
+            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]+data4.shape[2],x_rng[1]], y_rng, z_rng, data5)
         else:
             # Data must be in Z, Y, X format
             data = np.swapaxes(data,0,2)
@@ -111,8 +123,8 @@ def main():
             np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
     print('Annotation data uploaded and verified.')
-    else: 
-        print("Please specify either upload(-up) or download(-down) flags")
+    # else: 
+    #     print("Please specify either upload(-up) or download(-down) flags")
 
 if __name__ == '__main__':
     
