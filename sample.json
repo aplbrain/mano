@@ -1,0 +1,31 @@
+{
+    "protocol": "https",
+    "host": "api.bossdb.org",
+    "token": "TOKEN",
+    "image": {
+        "file_path": "/path/to/file",
+        "collection": "COLL",
+        "experiment": "EXP",
+        "channel": "CHAN",
+        "datatype": "uint8"
+    },
+    "annotation": {
+        "file_path": "/XRay_Mouse/1400_4152_5800_210_359_JPannos.nii",
+        "extension" : "nii",
+        "collection": "COLL",
+        "experiment": "EXP",
+        "channel": "ANN_CHAN",
+        "datatype": "uint64",
+        "description": ""
+    },
+    "xmin": 4152,
+    "xmax": 5800,
+
+    "ymin": 12,
+    "ymax": 1400,
+
+    "zmin": 210,
+    "zmax": 360,
+
+    "resolution": 0
+}
