@@ -68,25 +68,51 @@ def main():
             print("Annotation does not exist yet!")
             pass
     if args.up:
-        nii = nib.load(anno_config["annotation"]["file_path"]) 
-        data = np.array(nii.get_data())
-        # Data must be in Z, Y, X format
-        data = np.swapaxes(data,0,2)
+        if anno_config["annotation"]["extension"] == "npy":
+            data = np.load(anno_config["annotation"]["file_path"])
+        else:
+            nii = nib.load(anno_config["annotation"]["file_path"]) 
+            data = np.array(nii.get_data())
 
-        # Use datatype specified in JSON provided file
-        data = data.astype(anno_config["annotation"]["datatype"])
-        
-        #Upload the data to the annotation channel
-        print("Uploading your annotations...")
-        rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
-    else: 
-        print("Please specify either upload(-up) or download(-down) flags")
+        #Maximum byte size before blosc fails is the number below. 
+        if data.nbytes > 2147483631:
+            print("Your numpy array was larger than blosc could handle. It has been split.")
+            print(data.shape)
+            data1,data2 = np.split(data, 2)
 
-    # Verify that the cutout uploaded correctly by comparing arrays. 
-    ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
-    np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
+            # Data must be in Z, Y, X format
+            data1 = np.swapaxes(data1,0,2)
+            data2 = np.swapaxes(data2,0,2)
+
+            print("New shapes:")
+            print(data1.shape)
+            print(data2.shape)
+
+            # Use datatype specified in JSON provided file
+            data1 = data1.astype(anno_config["annotation"]["datatype"])
+            data2 = data2.astype(anno_config["annotation"]["datatype"])
+
+            #Upload the data to the annotation channel
+            print("Uploading your annotations...")
+            rmt.create_cutout(ann_chan, res, [x_rng[0],x_rng[0]+data1.shape[2]], y_rng, z_rng, data1)
+            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2],x_rng[1]], y_rng, z_rng, data2)
+        else:
+            # Data must be in Z, Y, X format
+            data = np.swapaxes(data,0,2)
+
+            # Use datatype specified in JSON provided file
+            data = data.astype(anno_config["annotation"]["datatype"])
+            
+            #Upload the data to the annotation channel
+            print("Uploading your annotations...")
+            rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
+            # Verify that the cutout uploaded correctly by comparing arrays. 
+            ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
+            np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
     print('Annotation data uploaded and verified.')
+    else: 
+        print("Please specify either upload(-up) or download(-down) flags")
 
 if __name__ == '__main__':
     
@@ -108,4 +134,4 @@ if __name__ == '__main__':
 
     #Define filePath for the user provided json file. 
     user_file = args.filePath
-    main() 
+    main()
