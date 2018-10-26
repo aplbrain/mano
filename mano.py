@@ -69,7 +69,7 @@ def main():
             print("Annotation does not exist yet!")
             pass
         print("Download Successful!")
-    if args.up:
+    elif args.up:
         if anno_config["annotation"]["extension"] == "npy":
             data = np.load(anno_config["annotation"]["file_path"])
         elif anno_config["annotation"]["extension"] == "nii":
@@ -125,8 +125,8 @@ def main():
             np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
         print('Annotation data uploaded and verified.')
-    # else: 
-    #     print("Please specify either upload(-up) or download(-down) flags")
+    else: 
+        print("Please specify either upload(-up) or download(-down) flags")
 
 if __name__ == '__main__':
     
