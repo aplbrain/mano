@@ -58,15 +58,17 @@ def main():
     # If specified to upload, upload cutout to the boss for the same dimensions. 
     if args.down:
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
-        np.save(annos_config["image"]["file_path"], donwload_numpy)
+        np.save(anno_config["image"]["file_path"], download_numpy)
         # If downloading, try to download annotations if they already exist. 
         try:
             download_nifti = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
             nifti_img = nib.Nifti1Image(download_nifti, np.eye(4))
+            nifti_img.to_filename(anno_config["annotation"]["file_path"])
             nib.save(nifti_img, anno_config["annotation"]["file_path"])
         except Exception as e:
             print("Annotation does not exist yet!")
             pass
+        print("Download Successful!")
     if args.up:
         if anno_config["annotation"]["extension"] == "npy":
             data = np.load(anno_config["annotation"]["file_path"])
@@ -122,7 +124,7 @@ def main():
             ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
             np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
-    print('Annotation data uploaded and verified.')
+        print('Annotation data uploaded and verified.')
     # else: 
     #     print("Please specify either upload(-up) or download(-down) flags")
 
