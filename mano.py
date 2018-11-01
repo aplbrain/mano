@@ -13,10 +13,7 @@ from requests import HTTPError
 
     Luis.Rodriguez@jhuapl.edu
 """
-def main():
-    with open(user_file) as f:
-        anno_config = json.load(f)
-    
+def mano(anno_config,down=False,up=False):
     #Creates boss remote with the correct credentials
     rmt = BossRemote({
         "protocol": anno_config["protocol"],
@@ -56,7 +53,7 @@ def main():
 
     # If specified to download, grab a cutout from boss
     # If specified to upload, upload cutout to the boss for the same dimensions. 
-    if args.down:
+    if down:
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
         np.save(anno_config["image"]["file_path"], download_numpy)
         # If downloading, try to download annotations if they already exist. 
@@ -69,7 +66,7 @@ def main():
             print("Annotation does not exist yet!")
             pass
         print("Download Successful!")
-    elif args.up:
+    elif up:
         if anno_config["annotation"]["extension"] == "npy":
             data = np.load(anno_config["annotation"]["file_path"])
         elif anno_config["annotation"]["extension"] == "nii":
@@ -128,6 +125,11 @@ def main():
     else: 
         print("Please specify either upload(-up) or download(-down) flags")
 
+def main():
+    with open(user_file) as f:
+        anno_config = json.load(f)
+        mano(anno_config,down,up)
+
 if __name__ == '__main__':
     
     # Parser arguments:
@@ -148,4 +150,10 @@ if __name__ == '__main__':
 
     #Define filePath for the user provided json file. 
     user_file = args.filePath
+    if args.down:
+        down = True
+        up = False
+    elif args.up:
+        up = True
+        down = False
     main()
