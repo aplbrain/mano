@@ -113,7 +113,10 @@ def main():
         else:
             # Data must be in Z, Y, X format
             data = np.swapaxes(data,0,2)
-
+            
+            # C-contiguous array
+            data = data.copy(order="C")
+            
             # Use datatype specified in JSON provided file
             data = data.astype(anno_config["annotation"]["datatype"])
             
