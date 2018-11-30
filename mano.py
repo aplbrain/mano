@@ -86,9 +86,6 @@ def main():
         # Transpose accordingly
         data = data.transpose((2, 1, 0))
 
-        # Guarantee C-contiguous array ordering
-        data = data.copy(order="C")
-
         # Use datatype specified in JSON provided file
         data = data.astype(anno_config["annotation"]["datatype"])
 
@@ -114,6 +111,8 @@ def main():
                 z_array[0]:z_array[1],
                 y_array[0]:y_array[1],
                 x_array[0]:x_array[1]]
+            # Guarantee C-contiguous array ordering
+            subset = subset.copy(order="C")
             rmt.create_cutout(
                     ann_chan,
                     res,
