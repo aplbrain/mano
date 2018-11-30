@@ -18,14 +18,14 @@ def main():
     with open(user_file) as f:
         anno_config = json.load(f)
 
-    #Creates boss remote with the correct credentials
+    # Create boss remote with the correct credentials
     rmt = BossRemote({
         "protocol": anno_config["protocol"],
         "host": anno_config["host"],
         "token": anno_config["token"],
     })
 
-    #Try to get_cahnnel of exisiting raw data and create a new channel for annotations
+    # Try to get_channel of existing raw data and create a new channel for annotations
     try:
         IMG_COLL_NAME = anno_config["image"]["collection"]
         IMG_EXP_NAME = anno_config["image"]["experiment"]
@@ -37,7 +37,7 @@ def main():
         ANN_CHAN_NAME = anno_config["annotation"]["channel"]
         chan_setup = ChannelResource(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME, type='annotation', datatype=anno_config["annotation"]["datatype"], sources=[anno_config["image"]["channel"]])
 
-        # Try to create channel, if it already exisits, simply pass
+        # Try to create channel, if it already exists, simply pass
         try:
             ann_chan = rmt.create_project(chan_setup)
         except Exception as e:
@@ -107,9 +107,9 @@ def main():
         print("Uploading your annotations...")
         for (x_bounds, y_bounds, z_bounds) in block_bounds:
             # Compute array indices by accounting for global origin
-            x_array = [x_bounds[0]-x_rng[0], x_bounds[1] - x_rng[0]]
-            y_array = [y_bounds[0]-y_rng[0], y_bounds[1] - y_rng[0]]
-            z_array = [z_bounds[0]-z_rng[0], z_bounds[1] - z_rng[0]]
+            x_array = [x_bounds[0] - x_rng[0], x_bounds[1] - x_rng[0]]
+            y_array = [y_bounds[0] - y_rng[0], y_bounds[1] - y_rng[0]]
+            z_array = [z_bounds[0] - z_rng[0], z_bounds[1] - z_rng[0]]
             rmt.create_cutout(
                     ann_chan,
                     res,
@@ -145,6 +145,6 @@ if __name__ == '__main__':
                 help = "Execute download")
     args = parser.parse_args()
 
-    #Define filePath for the user provided json file.
+    # Define filePath for the user provided json file.
     user_file = args.filePath
     main()
