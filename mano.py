@@ -1,5 +1,6 @@
 from intern.resource.boss.resource import *
 from intern.remote.boss import BossRemote
+from intern.utils.parallel import block_compute
 import nibabel as nib
 import numpy as np
 from PIL import Image
@@ -81,58 +82,44 @@ def main():
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=-1)
 
-        # Maximum byte size before blosc fails is the number below.
-        if data.nbytes > 2147483631:
-            print("Your numpy array was larger than blosc could handle. It has been split.")
-            print(data.shape)
-            data1,data2,data3,data4,data5 = np.array_split(data, 5)
+        # Data must be in (Z, Y, X) order
+        # Transpose accordingly
+        data = data.transpose((2, 1, 0))
 
-            # Data must be in Z, Y, X format
-            data1 = np.swapaxes(data1,0,2)
-            data2 = np.swapaxes(data2,0,2)
-            data3 = np.swapaxes(data3,0,2)
-            data4 = np.swapaxes(data4,0,2)
-            data5 = np.swapaxes(data5,0,2)
+        # Guarantee C-contiguous array ordering
+        data = data.copy(order="C")
 
-            print("New shapes:")
-            print(data1.shape)
-            print(data2.shape)
-            print(data3.shape)
-            print(data4.shape)
-            print(data5.shape)
+        # Use datatype specified in JSON provided file
+        data = data.astype(anno_config["annotation"]["datatype"])
 
-            # Use datatype specified in JSON provided file
-            data1 = data1.astype(anno_config["annotation"]["datatype"])
-            data2 = data2.astype(anno_config["annotation"]["datatype"])
-            data3 = data3.astype(anno_config["annotation"]["datatype"])
-            data4 = data4.astype(anno_config["annotation"]["datatype"])
-            data5 = data5.astype(anno_config["annotation"]["datatype"])
+        # Maximum byte count before blosc fails is 2147483631
+        # partition into 512x512x512 cubes accordingly
+        block_bounds = block_compute(
+                x_start=x_rng[0],
+                x_stop=x_rng[1],
+                y_start=y_rng[0],
+                y_stop=y_rng[1],
+                z_start=z_rng[0],
+                z_stop=z_rng[1],
+                block_size=(512, 512, 512))
 
-            #Upload the data to the annotation channel
-            print("Uploading your annotations...")
-            rmt.create_cutout(ann_chan, res, [x_rng[0],x_rng[0]+data1.shape[2]], y_rng, z_rng, data1)
-            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]], y_rng, z_rng, data2)
-            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]], y_rng, z_rng, data3)
-            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2],x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]+data4.shape[2]], y_rng, z_rng, data4)
-            rmt.create_cutout(ann_chan, res, [x_rng[0]+data1.shape[2]+data2.shape[2]+data3.shape[2]+data4.shape[2],x_rng[1]], y_rng, z_rng, data5)
-        else:
-            # Data must be in Z, Y, X format
-            data = np.swapaxes(data,0,2)
+        # Upload the data to the annotation channel
+        print("Uploading your annotations...")
+        for (x_bounds, y_bounds, z_bounds) in block_bounds:
+            rmt.create_cutout(
+                    ann_chan,
+                    res,
+                    x_bounds,
+                    y_bounds,
+                    z_bounds,
+                    data[x_bounds[0]:x_bounds[1], y_bounds[0]:y_bounds[1], z_bounds[0]:z_bounds[1]])
 
-            # C-contiguous array
-            data = data.copy(order="C")
-
-            # Use datatype specified in JSON provided file
-            data = data.astype(anno_config["annotation"]["datatype"])
-
-            #Upload the data to the annotation channel
-            print("Uploading your annotations...")
-            rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
-            # Verify that the cutout uploaded correctly by comparing arrays.
-            ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
-            np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
+        # Verify that the cutout uploaded correctly by comparing arrays
+        ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
+        np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
         print('Annotation data uploaded and verified.')
+
     else:
         print("Please specify either upload(-up) or download(-down) flags")
 
