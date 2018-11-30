@@ -110,13 +110,17 @@ def main():
             x_array = [x_bounds[0] - x_rng[0], x_bounds[1] - x_rng[0]]
             y_array = [y_bounds[0] - y_rng[0], y_bounds[1] - y_rng[0]]
             z_array = [z_bounds[0] - z_rng[0], z_bounds[1] - z_rng[0]]
+            subset = data[
+                z_array[0]:z_array[1],
+                y_array[0]:y_array[1],
+                x_array[0]:x_array[1]]
             rmt.create_cutout(
                     ann_chan,
                     res,
                     x_bounds,
                     y_bounds,
                     z_bounds,
-                    data[x_array[0]:x_array[1], y_array[0]:y_array[1], z_array[0]:z_array[1]])
+                    subset)
 
         # Verify that the cutout uploaded correctly by comparing arrays
         ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
