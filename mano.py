@@ -16,7 +16,7 @@ from requests import HTTPError
 def main():
     with open(user_file) as f:
         anno_config = json.load(f)
-    
+
     #Creates boss remote with the correct credentials
     rmt = BossRemote({
         "protocol": anno_config["protocol"],
@@ -55,11 +55,11 @@ def main():
     res = anno_config["resolution"]
 
     # If specified to download, grab a cutout from boss
-    # If specified to upload, upload cutout to the boss for the same dimensions. 
+    # If specified to upload, upload cutout to the boss for the same dimensions.
     if args.down:
         download_numpy = rmt.get_cutout(img_chan, res, x_rng, y_rng, z_rng)
         np.save(anno_config["image"]["file_path"], download_numpy)
-        # If downloading, try to download annotations if they already exist. 
+        # If downloading, try to download annotations if they already exist.
         try:
             download_nifti = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
             nifti_img = nib.Nifti1Image(download_nifti, np.eye(4))
@@ -73,10 +73,15 @@ def main():
         if anno_config["annotation"]["extension"] == "npy":
             data = np.load(anno_config["annotation"]["file_path"])
         elif anno_config["annotation"]["extension"] == "nii":
-            nii = nib.load(anno_config["annotation"]["file_path"]) 
+            nii = nib.load(anno_config["annotation"]["file_path"])
             data = np.array(nii.get_data())
 
-        #Maximum byte size before blosc fails is the number below. 
+        # Handle single image uploads
+        # Assume image is single (x, y)-ordered z-slice
+        if len(data.shape) == 2:
+            data = np.expand_dims(data, axis=-1)
+
+        # Maximum byte size before blosc fails is the number below.
         if data.nbytes > 2147483631:
             print("Your numpy array was larger than blosc could handle. It has been split.")
             print(data.shape)
@@ -113,26 +118,26 @@ def main():
         else:
             # Data must be in Z, Y, X format
             data = np.swapaxes(data,0,2)
-            
+
             # C-contiguous array
             data = data.copy(order="C")
-            
+
             # Use datatype specified in JSON provided file
             data = data.astype(anno_config["annotation"]["datatype"])
-            
+
             #Upload the data to the annotation channel
             print("Uploading your annotations...")
             rmt.create_cutout(ann_chan, res, x_rng, y_rng, z_rng, data)
-            # Verify that the cutout uploaded correctly by comparing arrays. 
+            # Verify that the cutout uploaded correctly by comparing arrays.
             ann_cutout_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
             np.testing.assert_array_equal(data[0,:,:], ann_cutout_data[0,:,:])
 
         print('Annotation data uploaded and verified.')
-    else: 
+    else:
         print("Please specify either upload(-up) or download(-down) flags")
 
 if __name__ == '__main__':
-    
+
     # Parser arguments:
     parser = argparse.ArgumentParser(description = "Script to upload annotations to the boss",
                                      formatter_class=argparse.RawDescriptionHelpFormatter
@@ -149,6 +154,6 @@ if __name__ == '__main__':
                 help = "Execute download")
     args = parser.parse_args()
 
-    #Define filePath for the user provided json file. 
+    #Define filePath for the user provided json file.
     user_file = args.filePath
     main()
