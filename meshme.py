@@ -3,6 +3,7 @@ import numpy as np
 from intern.remote.boss import BossRemote
 import tqdm
 import argparse
+import json
 
 """
     Script to keep track of uploaded annotations.
@@ -57,7 +58,7 @@ def main(args):
 
     # Get annotation data from boss:
     ann_chan = rmt.get_channel(ANN_CHAN_NAME, ANN_COLL_NAME, ANN_EXP_NAME)
-    boss_data - boss.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
+    boss_data = rmt.get_cutout(ann_chan, res, x_rng, y_rng, z_rng)
 
     # Mesh
     mesher = Mesher((x_voxel_size,y_voxel_size,z_voxel_size))
