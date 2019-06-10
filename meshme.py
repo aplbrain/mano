@@ -67,7 +67,7 @@ def main(args):
     for oid in tqdm.tqdm(mesher.ids()):
         mesh = mesher.get_mesh(oid, normals=False)
         mesh.vertices += [x_rng[0]*conv_factor, y_rng[0]*conv_factor, z_rng[0]*conv_factor]
-        with open("precompmeshes/{oid}", 'wb') as fh:
+        with open("precompmeshes/{}".format(oid), 'wb') as fh:
             fh.write(mesh.to_precomputed())
 
     # TODO - LMR - Add a way to push back to the boss through an API call OR the public bucket. Probably want to go with API version long term. 
