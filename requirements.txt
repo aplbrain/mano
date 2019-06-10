@@ -9,3 +9,4 @@ nibabel
 pillow
 cloud-volume
 zmesh
+tqdm

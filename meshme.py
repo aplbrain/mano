@@ -2,6 +2,7 @@ from zmesh import Mesher
 import numpy as np
 from intern.remote.boss import BossRemote
 import tqdm
+import argparse
 
 """
     Script to keep track of uploaded annotations.
@@ -83,7 +84,6 @@ if __name__ == '__main__':
     parser.add_argument("--units", "-u",
                         metavar = "unit_type",
                         default = None,
-                        required = True,
                         help = "The unit type of your coordinate frame (nanometers, millimeters etc)")
     args = parser.parse_args()
 
