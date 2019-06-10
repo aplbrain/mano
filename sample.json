@@ -1,9 +1,9 @@
 {
     "protocol": "https",
-    "host": "api.bossdb.org",
+    "host": "api.theboss.io",
     "token": "TOKEN",
     "image": {
-        "file_path": "/path/to/file",
+        "file_path": "./",
         "collection": "COLL",
         "experiment": "EXP",
         "channel": "CHAN",

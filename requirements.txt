@@ -7,3 +7,5 @@ nose2
 intern
 nibabel
 pillow
+cloud-volume
+zmesh
