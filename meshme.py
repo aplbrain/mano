@@ -35,6 +35,12 @@ def main(args):
     coordinate_frame = experiment.coord_frame
     cf = rmt.get_coordinate_frame(coordinate_frame)
 
+    # Default to simplification factor = 0 if none is specified. 
+    if anno_config["mesh"]["simplification_factor"]:
+        simp_fact = anno_config["mesh"]["simplification_factor"]
+    else:
+        simp_fact = 0
+
     # If not unit is provided fetch from boss
     if args.units == None:
         args.units = cf.voxel_unit
@@ -64,11 +70,19 @@ def main(args):
     mesher = Mesher((x_voxel_size,y_voxel_size,z_voxel_size))
     mesher.mesh(boss_data)
 
-    for oid in tqdm.tqdm(mesher.ids()):
-        mesh = mesher.get_mesh(oid, normals=False)
+    # Mesh either every id in the array or the specified id. 
+    # TODO -> Add option for multiple specified IDs
+    if anno_config["mesh"]["id"] == "*":
+        for oid in tqdm.tqdm(mesher.ids()):
+            mesh = mesher.get_mesh(oid, normals=False, simplification_factor=simp_fact)
+            mesh.vertices += [x_rng[0]*conv_factor, y_rng[0]*conv_factor, z_rng[0]*conv_factor]
+            with open("precompmeshes/{}".format(oid), 'wb') as fh:
+                fh.write(mesh.to_precomputed())
+    else:
+        mesh = mesher.get_mesh(anno_config["mesh"]["id"], normals=False, simplification_factor=simp_fact)
         mesh.vertices += [x_rng[0]*conv_factor, y_rng[0]*conv_factor, z_rng[0]*conv_factor]
-        with open("precompmeshes/{}".format(oid), 'wb') as fh:
-            fh.write(mesh.to_precomputed())
+        with open(str(anno_config["mesh"]["id"]), 'wb') as fh:
+            fh.write(mesh.to_obj())
 
     # TODO - LMR - Add a way to push back to the boss through an API call OR the public bucket. Probably want to go with API version long term. 
 
