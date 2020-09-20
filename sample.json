@@ -1,9 +1,9 @@
 {
     "protocol": "https",
     "host": "api.bossdb.org",
-    "token": "TOKEN",
+    "token": "eeb2bbed5f37a3e8a8105b0906c140b15d81562d",
     "image": {
-        "file_path": "/path/to/file",
+        "file_path": "./",
         "collection": "COLL",
         "experiment": "EXP",
         "channel": "CHAN",
@@ -12,20 +12,25 @@
     "annotation": {
         "file_path": "/XRay_Mouse/1400_4152_5800_210_359_JPannos.nii",
         "extension" : "nii",
-        "collection": "COLL",
-        "experiment": "EXP",
-        "channel": "ANN_CHAN",
+        "collection": "GTXrayData",
+        "experiment": "VS0172",
+        "channel": "automated_dense_pixel_a_jdm",
         "datatype": "uint64",
         "description": ""
     },
-    "xmin": 4152,
-    "xmax": 5800,
+    "mesh": {
+        "id": 19711,
+        "simplification_factor": 2,
+        "smooth:": 0.1
+    },
+    "xmin": 3400,
+    "xmax": 3600,
 
-    "ymin": 12,
-    "ymax": 1400,
+    "ymin": 300,
+    "ymax": 600,
 
-    "zmin": 210,
-    "zmax": 360,
+    "zmin": 100,
+    "zmax": 480,
 
     "resolution": 0
 }
